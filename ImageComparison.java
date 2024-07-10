@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 public class ImageComparison {
 
-    private static BufferedImage image, image1, screenShot, referenceScreenshots;
+    private static BufferedImage screenShot, referenceScreenshots;
     private static Reader reader = new Reader();
     public static double compare_image(BufferedImage img_1, BufferedImage img_2) {
         // Использование веделенного метода
@@ -41,51 +41,58 @@ public class ImageComparison {
         return mat1;
     }
 
-    public static void CompareImage(Reader reader, String pathScreenshots,String ReferenceScreenshots)
+    public static int CompareImage(Reader reader,String NameScreenshots, String pathScreenshots)
     {
-        for(ScreenshotData data: reader.screenshotData)
-        {
-            File fileScreenShot = new File(pathScreenshots+data.getScreenshotName()+".png");
+        ScreenshotData data = reader.screenshotData;
+
+            //File fileScreenShot = new File("/home/ubuntu/IdeaProjects/ImageComparison/Screenshots/"+pathScreenshots);
+            //File fileScreenShot = new File("C:\\Users\\d.andronychev\\AutoTest\\Screen\\"+pathScreenshots);
             try {
-                image = ImageIO.read(new File(ReferenceScreenshots+data.getScreenshotName()+".png"));
-                image1 = ImageIO.read(fileScreenShot);
+                // ----------------------Window--------------------------------
+                //referenceScreenshots = ImageIO.read(new File("C:\\Users\\d.andronychev\\AutoTest\\RefScreen\\"+NameScreenshots+".png"))
+                //                              .getSubimage(data.getXCoordinates(),data.getYCoordinates(),data.getWidth(),data.getHeight());
+
+                //screenShot = ImageIO.read(new File("C:\\Users\\d.andronychev\\AutoTest\\Screen\\"+pathScreenshots))
+                //                    .getSubimage(data.getXCoordinates(),data.getYCoordinates(),data.getWidth(),data.getHeight());
+
+                // -----------------------Linux-------------------------------
+                referenceScreenshots = ImageIO.read(new File("/home/ubuntu/IdeaProjects/ImageComparison/Screenshots/"+NameScreenshots+".png"))
+                                              .getSubimage(data.getXCoordinates(),data.getYCoordinates(),data.getWidth(),data.getHeight());
+
+                screenShot = ImageIO.read(new File("/home/ubuntu/IdeaProjects/ImageComparison/Screenshots/"+pathScreenshots))
+                                    .getSubimage(data.getXCoordinates(),data.getYCoordinates(),data.getWidth(),data.getHeight());
+
             } catch (IOException e1) {
                 System.out.println("Invalid address");
             }
 
-            referenceScreenshots = image.getSubimage(data.getXCoordinates(),data.getYCoordinates(),data.getWidth(),data.getHeight());
-            screenShot = image1.getSubimage(data.getXCoordinates(),data.getYCoordinates(),data.getWidth(),data.getHeight());
-
             if(compare_image(referenceScreenshots, screenShot)!=1)
-            {
-                System.out.println("Изображения различны");
+                return 1;
+            else
+                return 0;
 
-                try {
-                    ImageIO.write(screenShot,"png",new File(pathScreenshots+data.getScreenshotName()+"_obr.png"));
-                } catch (IOException e) {
-                    System.out.println("Invalid address");
-                }
-            }
-            else {
-                System.out.println("Идентичные изображения");
-
-                if (fileScreenShot.delete()) {
-                    System.out.println("File deleted successfully");
-                }
-            }
-        }
-    }
-    public static void FileDelete(File fileScreenShot)
-    {
-        if (fileScreenShot.delete()) {
-            System.out.println("File deleted successfully");
-        }
     }
 
-    public static void main(String[] args) {
+    private static void loadLibraries(){
+        try {
+            System.load("/home/ubuntu/opencv-4.8.0/build/lib/libopencv_java480.so");
+        } catch (Exception e){
+            throw new RuntimeException("Failed to load opencv native library", e);
+        }
 
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        reader.Reading(args[1]);
-        CompareImage(reader,args[0],args[1]);
+    }
+
+
+    public static int main(String[] args) {
+
+        // ------------------------------------------------------
+        loadLibraries(); // Linux
+        //System.loadLibrary(Core.NATIVE_LIBRARY_NAME); // Window
+        // ------------------------------------------------------
+
+        reader.Reading(args[0]);
+        return CompareImage(reader,args[0],args[1]);
+
+
     }
 }
